@@ -153,37 +153,89 @@ export const resendLink = async (req, res, next) => {
   }
 };
 
-export const forgotpassword = async (req, res, next) => {
-  const user = await User.findOne({ username: req.body.email })
-  if (!user) return next(createError(404, 'No user with that email'))
-  const resetToken = user.createResetPassword()
+export const restLink = async (req, res, next) => {
+  try{
+    const id = req.params.id
+    const token = req.params.token
+   
+  jwt.verify(token, process.env.JWT, async (err) => {
+    if (err) {
+      return next(createError(403, "Token not valid"));
+    }
+  });
+  const userpaassword = await user.findById(id)
+  const salt = bcrypt.genSaltSync(10);
+  const hash = bcrypt.hashSync(req.body.password, salt)
+  userpaassword.password = hash
+  userpaassword.save()
+  res.send("you have successfuly change your password")
 
-  await user.save({ validateBeforeSave: false })
-  const resetURL = `${req.protocol}://${req.get(
-    'host',
-  )}/users/resetpassword/${resetToken}`
-
-  try {
-    const message = `Forgot your password? Submit patch request with your new password to: ${resetURL}.
-     \nIf you didnt make this request, simply ignore. Password expires in 10 minutes`
-    sendEmail({
-      email: user.email,
-      subject: 'Your password reset token is valid for 10 mins',
-      message,
-    })
-    res.status(200).json({
-      status: 'success',
-      message: 'Token sent to email!',
-    })
-  } catch (err) {
-    user.resetPasswordToken = undefined
-    user.resetPasswordExpires = undefined
-    await user.save({ validateBeforeSave: false })
-    return next(
-      createError(
-        500,
-        'There was an error sending email, please try again later',
-      ),
-    )
-  }
+  }catch(err){next(err)}
 }
+
+export const forgotpassword = async (req, res, next) => { 
+  try{
+    const userEmail = await user.findOne({email: req.body.email})
+    // console.log(userEmail)
+  if (!userEmail) return next(createError(404, 'No user with that email'))
+  const token = jwt.sign({ id: userEmail._id }, process.env.JWT, {
+    expiresIn: "1m",
+  });
+  const resetURL = `${req.protocol}://${req.get(
+        'host',
+      )}/auth/restLink/${userEmail._id}/${token}`
+
+  const message = `Forgot your password? Submit patch request with your new password to: ${resetURL}.
+       \nIf you didnt make this request, simply ignore. Password expires in 10 minutes`
+      sendEmail({
+        email: userEmail.email,
+        subject: 'Your password reset token is valid for 10 mins',
+        message,
+      })
+      res.status(200).json({
+        status: 'success',
+        message: 'Token sent to email!',
+      })
+
+  }catch(err){
+    next(err)
+  }
+
+}
+
+
+
+// export const forgotpassword = async (req, res, next) => {
+//   const user = await User.findOne({ username: req.body.email })
+//   if (!user) return next(createError(404, 'No user with that email'))
+//   const resetToken = user.createResetPassword()
+
+//   await user.save({ validateBeforeSave: false })
+//   const resetURL = `${req.protocol}://${req.get(
+//     'host',
+//   )}/users/resetpassword/${resetToken}`
+
+//   try {
+//     const message = `Forgot your password? Submit patch request with your new password to: ${resetURL}.
+//      \nIf you didnt make this request, simply ignore. Password expires in 10 minutes`
+//     sendEmail({
+//       email: user.email,
+//       subject: 'Your password reset token is valid for 10 mins',
+//       message,
+//     })
+//     res.status(200).json({
+//       status: 'success',
+//       message: 'Token sent to email!',
+//     })
+//   } catch (err) {
+//     user.resetPasswordToken = undefined
+//     user.resetPasswordExpires = undefined
+//     await user.save({ validateBeforeSave: false })
+//     return next(
+//       createError(
+//         500,
+//         'There was an error sending email, please try again later',
+//       ),
+//     )
+//   }
+// }

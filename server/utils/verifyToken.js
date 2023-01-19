@@ -3,7 +3,7 @@ import User from '../model/user.js'
 import { createError } from "./error.js";
 
 export const verifyToken = async (req, res, next) => {
-  const user = await User.findById(req.params.Id)
+  const user = await User.findById(req.params.id)
   const token = user.token
   console.log(user)
 

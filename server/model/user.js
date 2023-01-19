@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import crypto from 'crypto'
+// import crypto from 'crypto'
 
 const userSchema = new mongoose.Schema(
   {
@@ -42,14 +42,14 @@ const userSchema = new mongoose.Schema(
   },
 )
 
-userSchema.methods.createPasswordReset = function () {
-  const resetToken = crypto.randomBytes(32).toString('hex')
-  this.resetPasswordToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex')
-  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000 // 10 mins before the password token exires
-  return resetToken
-}
+// userSchema.methods.createPasswordReset = function () {
+//   const resetToken = crypto.randomBytes(32).toString('hex')
+//   this.resetPasswordToken = crypto
+//     .createHash('sha256')
+//     .update(resetToken)
+//     .digest('hex')
+//   this.resetPasswordExpires = Date.now() + 10 * 60 * 1000 // 10 mins before the password token exires
+//   return resetToken
+// }
 
 export default mongoose.model('User', userSchema)
